@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light only">
+<title>PENTAD — 5軸性格診断</title>
+<!-- ===== OGP / Twitter Card =====
+     公開前に YudaKusatake を自分のGitHubユーザー名に置換してください（2箇所） -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="PENTAD — 5軸で測る性格診断">
+<meta property="og:description" content="MBTIを心理学の5因子モデルで作り直した、全30問の行動診断。あなたのタイプは？">
+<meta property="og:url" content="https://YudaKusatake.github.io/pentad/">
+<meta property="og:image" content="https://YudaKusatake.github.io/pentad/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PENTAD — 5軸で測る性格診断">
+<meta name="twitter:description" content="MBTIを心理学の5因子モデルで作り直した、全30問の行動診断。あなたのタイプは？">
+<meta name="twitter:image" content="https://YudaKusatake.github.io/pentad/ogp.png">
+<style>
+  :root{color-scheme:light only;
+    --ink:#12161c;
+    --paper:#eae4d8;
+    --paper2:#e2dbcb;
+    --line:#3a4048;
+    --O:#c0603a; /* 開放 */
+    --C:#3f7d6e; /* 誠実 */
+    --E:#d29b2b; /* 外向 */
+    --A:#6a72a8; /* 協調 */
+    --N:#a8476a; /* 神経症 */
+    --fade:#7a7466;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;background:var(--paper)}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    color-scheme:light only;
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      linear-gradient(rgba(58,64,72,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(58,64,72,.04) 1px,transparent 1px);
+    background-size:28px 28px;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+
+  /* mono utility face for data */
+  .mono{font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+  /* ---------- INTRO ---------- */
+  header.hero{padding:72px 0 40px}
+  .eyebrow{font-size:12px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--fade);font-weight:600;margin-bottom:26px}
+  .brand{font-size:clamp(52px,13vw,104px);font-weight:800;letter-spacing:-.03em;
+    line-height:.9;font-family:"Georgia",serif;position:relative}
+  .brand .dot{color:var(--O)}
+  .lede{margin-top:26px;font-size:17px;max-width:52ch;color:#2a2f36}
+  .axes{margin:38px 0 8px;border-top:1.5px solid var(--line);
+    border-bottom:1.5px solid var(--line)}
+  .axrow{display:grid;grid-template-columns:34px 1fr auto;gap:16px;
+    align-items:center;padding:13px 0;border-bottom:1px solid rgba(58,64,72,.18)}
+  .axrow:last-child{border-bottom:none}
+  .axletter{font-family:"Georgia",serif;font-size:26px;font-weight:700;text-align:center}
+  .axname{font-size:14px}
+  .axname b{font-weight:700}
+  .axpoles{font-size:12px;color:var(--fade)}
+  .method{margin:30px 0;font-size:13.5px;color:#43484f;
+    border-left:3px solid var(--line);padding:4px 0 4px 18px}
+  .start{margin:8px 0 90px}
+  button.cta{appearance:none;border:1.5px solid var(--ink);background:var(--ink);
+    color:var(--paper);font-size:16px;font-weight:700;padding:16px 40px;
+    cursor:pointer;letter-spacing:.04em;transition:.18s;font-family:inherit}
+  button.cta:hover{background:transparent;color:var(--ink)}
+  button.cta:focus-visible{outline:3px solid var(--O);outline-offset:3px}
+
+  /* ---------- QUIZ ---------- */
+  #quiz{display:none;padding:40px 0 120px;min-height:100vh}
+  .progline{position:sticky;top:0;background:var(--paper);padding:18px 0 14px;
+    z-index:5;border-bottom:1.5px solid var(--line)}
+  .progmeta{display:flex;justify-content:space-between;align-items:baseline;
+    font-size:12px;letter-spacing:.14em;color:var(--fade);margin-bottom:9px}
+  .progmeta .cur{color:var(--ink);font-weight:700;font-size:15px}
+  .track{height:6px;background:var(--paper2);border:1px solid rgba(58,64,72,.25)}
+  .bar{height:100%;background:var(--ink);width:0;transition:width .35s cubic-bezier(.2,.7,.2,1)}
+  .qcard{padding:52px 0 10px;min-height:52vh}
+  .qtag{font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+    font-weight:700;margin-bottom:22px;display:inline-block}
+  .qnum{font-family:"Georgia",serif;font-size:15px;color:var(--fade);
+    margin-bottom:10px}
+  .qtext{font-size:clamp(21px,3.6vw,27px);font-weight:700;line-height:1.5;
+    margin-bottom:34px;letter-spacing:-.01em}
+  .opts{display:flex;flex-direction:column;gap:11px}
+  .opt{display:flex;align-items:flex-start;gap:15px;padding:16px 18px;
+    border:1.5px solid rgba(58,64,72,.32);background:var(--paper2);
+    cursor:pointer;transition:.14s;font-size:15.5px;text-align:left;
+    font-family:inherit;color:var(--ink);line-height:1.5}
+  .opt:hover{border-color:var(--ink);transform:translateX(3px)}
+  .opt:focus-visible{outline:3px solid var(--O);outline-offset:2px}
+  .opt .key{font-family:"Georgia",serif;font-weight:700;font-size:15px;
+    min-width:20px;color:var(--fade);padding-top:1px}
+  .navbtns{display:flex;justify-content:space-between;margin-top:34px}
+  .back{background:none;border:none;color:var(--fade);cursor:pointer;
+    font-size:14px;font-family:inherit;padding:8px 2px}
+  .back:hover{color:var(--ink)}
+  .back:disabled{opacity:.3;cursor:default}
+
+  /* ---------- RESULT ---------- */
+  #result{display:none;padding:56px 0 120px}
+  .rcode{font-family:"Georgia",serif;font-size:clamp(60px,15vw,120px);
+    font-weight:800;letter-spacing:.02em;line-height:1;margin:6px 0 4px}
+  .rcode span{display:inline-block}
+  .rsub{font-size:14px;color:var(--fade);letter-spacing:.2em;
+    text-transform:uppercase;margin-bottom:8px}
+  .rtitle{font-size:clamp(24px,5vw,34px);font-weight:800;margin:18px 0 8px;
+    letter-spacing:-.01em}
+  .rdesc{font-size:16px;max-width:56ch;color:#2a2f36;margin-bottom:44px}
+  .meters{border-top:1.5px solid var(--line);margin-top:10px}
+  .meter{padding:22px 0;border-bottom:1px solid rgba(58,64,72,.18)}
+  .mhead{display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:11px}
+  .mname{font-size:14px;font-weight:700}
+  .mname .ltr{font-family:"Georgia",serif;font-size:19px;margin-right:8px}
+  .mscore{font-size:13px;color:var(--fade)}
+  .mtrack{position:relative;height:30px;background:var(--paper2);
+    border:1px solid rgba(58,64,72,.28)}
+  .mtrack .mid{position:absolute;left:50%;top:-4px;bottom:-4px;width:1.5px;
+    background:var(--line)}
+  .mfill{position:absolute;top:0;bottom:0;opacity:.85;transition:width .9s cubic-bezier(.2,.7,.2,1),left .9s cubic-bezier(.2,.7,.2,1)}
+  .mpoles{display:flex;justify-content:space-between;font-size:11.5px;
+    color:var(--fade);margin-top:7px}
+  .mpoles .active{color:var(--ink);font-weight:700}
+  .rnote{margin:40px 0 30px;font-size:13.5px;color:#43484f;
+    border-left:3px solid var(--line);padding:6px 0 6px 18px}
+  .again{background:none;border:1.5px solid var(--ink);color:var(--ink);
+    padding:14px 32px;font-weight:700;cursor:pointer;font-family:inherit;
+    font-size:15px;transition:.16s}
+  .again:hover{background:var(--ink);color:var(--paper)}
+  .share{display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 20px}
+  .xbtn{display:inline-flex;align-items:center;gap:9px;background:var(--ink);
+    color:var(--paper);border:1.5px solid var(--ink);padding:14px 24px;
+    font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;transition:.16s}
+  .xbtn:hover{background:#000;border-color:#000}
+  .xbtn svg{flex-shrink:0}
+  .copybtn{background:var(--paper2);color:var(--ink);
+    border:1.5px solid rgba(58,64,72,.4);padding:14px 22px;font-weight:700;
+    font-size:15px;cursor:pointer;font-family:inherit;transition:.16s}
+  .copybtn:hover{border-color:var(--ink)}
+  .xbtn:focus-visible,.copybtn:focus-visible{outline:3px solid var(--O);outline-offset:2px}
+  .disclaim{margin-top:56px;font-size:12px;color:var(--fade);
+    border-top:1px solid rgba(58,64,72,.2);padding-top:18px;max-width:60ch}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===== INTRO ===== -->
+<div id="intro" class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Personality Instrument</div>
+    <h1 class="brand">PENTAD<span class="dot">.</span></h1>
+    <p class="lede">性格を「タイプ」ではなく<b>5本の連続した軸の測定値</b>として捉える診断。MBTIの直感的な文字コードは残しつつ、土台を心理学で最も検証されている5因子モデルに置き換えました。</p>
+
+    <div class="axes mono">
+      <div class="axrow"><div class="axletter" style="color:var(--O)">O</div>
+        <div><div class="axname"><b>Openness</b> 開放性</div>
+        <div class="axpoles">現実的 ⟷ 探究的</div></div><div></div></div>
+      <div class="axrow"><div class="axletter" style="color:var(--C)">C</div>
+        <div><div class="axname"><b>Conscientiousness</b> 誠実性</div>
+        <div class="axpoles">柔軟 ⟷ 計画的</div></div><div></div></div>
+      <div class="axrow"><div class="axletter" style="color:var(--E)">E</div>
+        <div><div class="axname"><b>Extraversion</b> 外向性</div>
+        <div class="axpoles">内向 ⟷ 外向</div></div><div></div></div>
+      <div class="axrow"><div class="axletter" style="color:var(--A)">A</div>
+        <div><div class="axname"><b>Agreeableness</b> 協調性</div>
+        <div class="axpoles">主張的 ⟷ 協調的</div></div><div></div></div>
+      <div class="axrow"><div class="axletter" style="color:var(--N)">N</div>
+        <div><div class="axname"><b>Neuroticism</b> 神経症傾向</div>
+        <div class="axpoles">安定 ⟷ 敏感</div></div><div></div></div>
+    </div>
+
+    <p class="method">全30問。すべて「具体的な場面であなたがどう動くか」を問う行動選択式。<br>
+    「自分は論理的だと思う」のような自己申告は使わないため、自己認識のバイアスが乗りにくい設計です。各軸に逆転項目を混ぜ、"いつも同じ側を選ぶ癖"も補正します。</p>
+
+    <div class="start">
+      <button class="cta" onclick="startQuiz()">診断をはじめる</button>
+    </div>
+  </header>
+</div>
+
+<!-- ===== QUIZ ===== -->
+<div id="quiz" class="wrap">
+  <div class="progline">
+    <div class="progmeta mono">
+      <span>PENTAD / 30 QUESTIONS</span>
+      <span><span class="cur" id="curN">01</span> — 30</span>
+    </div>
+    <div class="track"><div class="bar" id="bar"></div></div>
+  </div>
+  <div class="qcard" id="qcard"></div>
+  <div class="navbtns">
+    <button class="back" id="backBtn" onclick="goBack()">← 前に戻る</button>
+    <span></span>
+  </div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="result" class="wrap"></div>
+
+<script>
+/* ================= QUESTIONS =================
+ factor: O/C/E/A/N
+ rev:true => 選択肢Aが「低」側（逆転項目）。
+ 各選択肢[0]=A側,[1]=B側。基本はA=高スコア側だが rev で反転。
+ 回答は5段階で本人が強度を選ぶ（下記 SCALE）。
+*/
+const SCALE = [
+  {k:"A", label:"Aに強く近い", w:+2},
+  {k:"a", label:"どちらかといえばA", w:+1},
+  {k:"–", label:"中間・どちらとも", w:0},
+  {k:"b", label:"どちらかといえばB", w:-1},
+  {k:"B", label:"Bに強く近い", w:-2},
+];
+
+/* A側の文を「その因子が高い行動」に固定して書く。
+   rev:true の問題は A側=低い行動 にして、採点時に符号反転。*/
+const Q = [
+  // ---------- O 開放性 ----------
+  {f:"O",q:"新しいカフェに入った。メニューに見たことのない不思議な名前のドリンクがある。",
+   a:"どんな味か気になるので、それを頼んでみる",
+   b:"外れると嫌なので、いつも飲む定番を頼む"},
+  {f:"O",q:"休日に半日空いた。何をして過ごす？",
+   a:"行ったことのない街や展示に、ふらっと足を運ぶ",
+   b:"慣れた店や家で、いつものように落ち着いて過ごす"},
+  {f:"O",q:"友人が「抽象画って結局よく分からない」と言った。あなたの本音は？",
+   a:"分からなさ自体が面白い。何を表そうとしたか想像したくなる",
+   b:"同感。意味の分からないものより、きれいで分かりやすい方がいい"},
+  {f:"O",rev:true,q:"仕事の進め方を新しいツールに一新しようと提案があった。",
+   a:"今のやり方で困っていない。慣れた方法を続けたい",
+   b:"面白そう。とりあえず試して自分に合うか確かめたい"},
+  {f:"O",q:"会話中、まったく専門外の話題（宇宙論・古代史など）が出てきた。",
+   a:"聞いたことないぶん引き込まれて、質問をどんどんしてしまう",
+   b:"自分に関係ないので、ほどほどに相槌を打って流す"},
+  {f:"O",rev:true,q:"旅行の計画。ガイドブックに載っていない選択肢について。",
+   a:"評判の確かな定番スポットを回る方が安心できる",
+   b:"地元の人しか知らない場所を探して、そこへ行きたい"},
+
+  // ---------- C 誠実性 ----------
+  {f:"C",q:"1ヶ月後が締切の課題を渡された。あなたはどう動く？",
+   a:"すぐ計画を立て、早めに少しずつ進める",
+   b:"まだ先なので、気が向いたら/直前になったら取りかかる"},
+  {f:"C",q:"外出前の部屋の状態は、たいてい？",
+   a:"物の定位置が決まっていて、だいたい片づいている",
+   b:"多少散らかっていても気にならない。必要な時に片づける"},
+  {f:"C",rev:true,q:"新しい趣味を始めた。数週間後のあなたは？",
+   a:"熱が冷めて、道具を置いたまま次の興味に移りがち",
+   b:"コツコツ続けて、習慣として定着させている"},
+  {f:"C",q:"飲み会の帰り、明日は朝から予定がある。",
+   a:"ここで切り上げて帰り、明日に備える",
+   b:"楽しいので、つい流れで最後まで残ってしまう"},
+  {f:"C",q:"約束の待ち合わせ。あなたは普段？",
+   a:"少し早めに着くように逆算して家を出る",
+   b:"ぎりぎり、または少し遅れることがそこそこある"},
+  {f:"C",rev:true,q:"やることが10個ある日。あなたの典型は？",
+   a:"目についたものから手をつけ、抜けが出ることもある",
+   b:"リスト化して優先順位をつけ、一つずつ潰していく"},
+
+  // ---------- E 外向性 ----------
+  {f:"E",q:"知り合いのいないパーティーに来た。開始30分のあなたは？",
+   a:"誰かに話しかけて、その場の輪に入っていく",
+   b:"壁際や隅で、様子を見ながら知った顔を探す"},
+  {f:"E",q:"週末に予定がまったくない。理想は？",
+   a:"誰かを誘って出かける。人と会うと元気が出る",
+   b:"一人でゆっくり。人に会わない時間で充電される"},
+  {f:"E",rev:true,q:"会議で新しい議題が出た瞬間、あなたは？",
+   a:"まず頭の中で整理してから、まとまったら発言する",
+   b:"思いついたそばから口に出し、話しながら考える"},
+  {f:"E",q:"連休明け。同僚に週末どうだった？と聞かれた。",
+   a:"あれこれ話したくなり、自分からよく喋る",
+   b:"聞かれたことに短く答える程度で十分"},
+  {f:"E",q:"エネルギーが切れて疲れた夜。回復したい。",
+   a:"友達に電話したり外に出て、人の中で気晴らししたい",
+   b:"連絡を断って一人になり、静かに過ごしたい"},
+  {f:"E",rev:true,q:"大人数の集まりが4時間続いた後の気分は？",
+   a:"気疲れした。一人になってほっとしたい",
+   b:"まだ物足りない。二次会があるなら行きたい"},
+
+  // ---------- A 協調性 ----------
+  {f:"A",q:"店員が明らかに注文を間違えて持ってきた（でも食べられる物）。",
+   a:"波風立てたくないので、そのまま受け取って食べる",
+   b:"きちんと指摘して、頼んだ物に替えてもらう"},
+  {f:"A",rev:true,q:"友人の意見が自分と真っ向から対立した。議論の場で。",
+   a:"納得いくまで自分の主張を通す。譲るのは違う",
+   b:"相手の立場も一理あると感じ、歩み寄りを探す"},
+  {f:"A",q:"困っている見知らぬ人（道に迷っている等）を見かけた。",
+   a:"自分から声をかけて助けようとする",
+   b:"余計なお世話かもと思い、基本は関わらない"},
+  {f:"A",q:"チームで自分の手柄になりそうな場面。実際は皆で作った成果だ。",
+   a:"みんなの貢献だと周りを立てる",
+   b:"自分がやった部分はしっかり自分の功績として示す"},
+  {f:"A",rev:true,q:"人から頼み事をされた。自分は少し面倒だと感じる内容。",
+   a:"自分の都合を優先し、無理なら正直に断る",
+   b:"相手が困っていそうなら、多少無理してでも引き受ける"},
+  {f:"A",q:"SNSで自分と反対の政治的意見を見た。",
+   a:"そういう見方もあるのかと、まず理解しようとする",
+   b:"間違っていると感じ、反論したくなる"},
+
+  // ---------- N 神経症傾向 ----------
+  {f:"N",q:"送ったメッセージに、半日返信がない。相手はよく使う人。",
+   a:"何か気に障ったかな…と、つい理由を考えてしまう",
+   b:"忙しいんだろうと、特に気にせず自分のことをする"},
+  {f:"N",rev:true,q:"大事なプレゼンの前夜。あなたの状態は？",
+   a:"やることはやった、と落ち着いて眠れる",
+   b:"うまくいくか不安で、なかなか寝つけない"},
+  {f:"N",q:"予定が急にキャンセルされ、段取りが崩れた。",
+   a:"もやもやして、しばらく気持ちを引きずる",
+   b:"仕方ない、と切り替えて別のことをする"},
+  {f:"N",q:"過去の失敗（数年前の恥ずかしい言動など）をふと思い出したとき。",
+   a:"今でも急に思い出して、うっと落ち込むことがある",
+   b:"過ぎたことなので、思い出しても平気"},
+  {f:"N",rev:true,q:"複数の締切と用事が同じ週に重なった。",
+   a:"一つずつ片づければいい、と比較的冷静でいられる",
+   b:"手が回らない気がして、焦りや不安が強くなる"},
+  {f:"N",q:"体調に小さな異変（謎の痛みなど）があった。",
+   a:"大きな病気かも…と心配が膨らみやすい",
+   b:"そのうち治るだろうと、あまり気にしない"},
+];
+
+/* ============ STATE ============ */
+let idx=0;
+const answers=new Array(Q.length).fill(null);
+
+function startQuiz(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  idx=0; render(); window.scrollTo(0,0);
+}
+
+const factorColor={O:'var(--O)',C:'var(--C)',E:'var(--E)',A:'var(--A)',N:'var(--N)'};
+const factorName={O:'OPENNESS',C:'CONSCIENTIOUSNESS',E:'EXTRAVERSION',A:'AGREEABLENESS',N:'NEUROTICISM'};
+
+function render(){
+  const q=Q[idx];
+  const col=factorColor[q.f];
+  document.getElementById('curN').textContent=String(idx+1).padStart(2,'0');
+  document.getElementById('bar').style.width=((idx)/(Q.length))*100+'%';
+  document.getElementById('backBtn').disabled = idx===0;
+
+  const optsHTML = [
+    {w:+2,txt:q.a,key:'A',strong:true},
+    {w:+1,txt:'どちらかといえば → '+shorten(q.a),key:'a'},
+    {w:0, txt:'中間・どちらとも言えない',key:'–'},
+    {w:-1,txt:'どちらかといえば → '+shorten(q.b),key:'b'},
+    {w:-2,txt:q.b,key:'B',strong:true},
+  ].map(o=>`
+    <button class="opt" onclick="answer(${o.w})">
+      <span class="key">${o.key}</span>
+      <span>${o.txt}</span>
+    </button>`).join('');
+
+  document.getElementById('qcard').innerHTML=`
+    <span class="qtag mono" style="color:${col}">${factorName[q.f]}</span>
+    <div class="qnum mono">Q${String(idx+1).padStart(2,'0')} / 30</div>
+    <div class="qtext">${q.q}</div>
+    <div class="opts">${optsHTML}</div>`;
+
+  // restore selection highlight
+  if(answers[idx]!==null){
+    const map={2:0,1:1,0:2,[-1]:3,[-2]:4};
+    const btns=document.querySelectorAll('.opt');
+    const sel=map[answers[idx]];
+    if(btns[sel])btns[sel].style.borderColor='var(--ink)';
+  }
+}
+
+function shorten(t){ return t.length>26 ? t.slice(0,24)+'…' : t; }
+
+function answer(w){
+  answers[idx]=w;
+  if(idx<Q.length-1){ idx++; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+  else finish();
+}
+function goBack(){ if(idx>0){ idx--; render(); window.scrollTo({top:0,behavior:'smooth'}); } }
+
+/* ============ SCORING ============ */
+function finish(){
+  // raw sums per factor
+  const raw={O:0,C:0,E:0,A:0,N:0};
+  Q.forEach((q,i)=>{
+    let w=answers[i]??0;
+    if(q.rev) w=-w;        // 逆転項目は符号反転
+    raw[q.f]+=w;           // 各因子 -12..+12
+  });
+  showResult(raw);
+}
+
+function classify(v){
+  // -12..12  ->  high / x / low
+  if(v>=5)  return 'high';
+  if(v<=-5) return 'low';
+  return 'mid';
+}
+const letterMap={
+  O:{high:'O',mid:'x',low:'o'},
+  C:{high:'C',mid:'x',low:'c'},
+  E:{high:'E',mid:'x',low:'e'},
+  A:{high:'A',mid:'x',low:'a'},
+  N:{high:'N',mid:'x',low:'n'},
+};
+
+const poleLabels={
+  O:['現実的','探究的'], C:['柔軟','計画的'], E:['内向','外向'],
+  A:['主張的','協調的'], N:['安定','敏感']
+};
+const factorJP={O:'開放性',C:'誠実性',E:'外向性',A:'協調性',N:'神経症傾向'};
+
+// short trait phrases for the title/description
+const desc={
+  O:{high:'新しい経験や抽象的な発想に強く惹かれ',low:'現実的で、慣れた確かなものを好み'},
+  C:{high:'計画的で自己管理が行き届き',low:'柔軟で、その場の流れに合わせて動き'},
+  E:{high:'人との関わりからエネルギーを得て',low:'一人の時間で充電する内向型で'},
+  A:{high:'他者に配慮し協調を優先し',low:'自分の意見を率直に主張し'},
+  N:{high:'感情の揺れを繊細に感じ取り',low:'情緒が安定していて動じにくく'},
+};
+
+/* ===== 全16キャラ（O/C/E/A の高低） + Nで二つ名修飾 =====
+   中立(x)は「その軸が判定不能」＝両側の中間として扱い、
+   最も近い型に寄せず専用のフォールバック名を返す。 */
+
+// キー: O C E A の順で 'H'(high)/'L'(low)。x はワイルドカード扱いで後段処理。
+const TYPE16={
+  // O高 = 探究的／アイデア型
+  "HHHH":{name:"星をつなぐ設計者",     tag:"アイデアを形にし、人も巻き込んで前に進める理想家"},
+  "HHHL":{name:"独創のプロデューサー", tag:"新しい構想を計画に落とし、結果まで押し切る仕掛け人"},
+  "HHLH":{name:"静かな発明家",         tag:"一人で構想を練り上げ、丁寧に世に出す職人肌の探究者"},
+  "HHLL":{name:"孤高のアーキテクト",   tag:"自分の理想設計を、誰にも迷わされず突き詰める人"},
+  "HLHH":{name:"ひらめきの伝道師",     tag:"面白い発想を軽やかに広め、場に刺激を与えるムード源"},
+  "HLHL":{name:"自由なアジテーター",   tag:"型にはまらず、思いつきで人を動かす扇動役"},
+  "HLLH":{name:"やさしい夢想家",       tag:"独自の世界を持ちつつ、人にはそっと寄り添う空想家"},
+  "HLLL":{name:"漂泊の思索者",         tag:"誰にも縛られず、興味の赴くまま思考を旅する一匹狼"},
+  // O低 = 現実的／実務型
+  "LHHH":{name:"みんなの司令塔",       tag:"堅実な段取りと面倒見で、チームを回すまとめ役"},
+  "LHHL":{name:"結果で語る隊長",       tag:"目標へ最短で人を率いる、実行力のリーダー"},
+  "LHLH":{name:"縁の下の名脇役",       tag:"目立たずとも約束を守り、周りを静かに支える屋台骨"},
+  "LHLL":{name:"寡黙な職人",           tag:"自分の担当を黙々と、確実に仕上げる現場の要"},
+  "LLHH":{name:"場を温める世話役",     tag:"理屈より空気。人の輪を明るくする潤滑油"},
+  "LLHL":{name:"勢いのムードメーカー", tag:"ノリと行動力でその場を動かす、陽のエネルギー"},
+  "LLLH":{name:"穏やかな受け止め役",   tag:"派手さはないが、人の話を静かに受け止める癒し手"},
+  "LLLL":{name:"わが道のマイペーサー", tag:"流行にも人にも流されず、自分の心地よさを守る人"},
+};
+
+// N修飾：高=繊細/情熱、低=動じない/泰然
+function nMod(nCls){
+  if(nCls==='high') return {pre:"繊細な",  note:"感受性が強いぶん、心の機微に気づける"};
+  if(nCls==='low')  return {pre:"動じない", note:"何があっても落ち着いていられる安定感"};
+  return {pre:"", note:""};
+}
+
+function resolveType(cls){
+  // x を含む軸を H/L 両方に展開し、該当16型を集める
+  const axes=['O','C','E','A'];
+  const opts=axes.map(a=> cls[a]==='high'?['H'] : cls[a]==='low'?['L'] : ['H','L']);
+  const keys=[];
+  for(const o of opts[0])for(const c of opts[1])for(const e of opts[2])for(const a of opts[3])
+    keys.push(o+c+e+a);
+  const xCount=axes.filter(a=>cls[a]==='mid').length;
+
+  const nm=nMod(cls.N);
+
+  // 4軸すべて中立に近い → 完全バランス型
+  if(xCount>=3){
+    return {name:(nm.pre?nm.pre+"・":"")+"balanced｜まんなかの人",
+      tag:"どの方向にも極端に振れず、状況に合わせて姿を変えられる万能型。"+(nm.note?"さらに"+nm.note+"。":"")};
+  }
+  // x が1〜2個 → 代表キーで命名しつつ「〜寄り」と明示
+  const base=TYPE16[keys[0]];
+  let name=(nm.pre?nm.pre:"")+base.name;
+  let tag=base.tag+(nm.note?"。"+nm.note+"タイプ":"");
+  if(xCount>=1) tag="（"+["O","C","E","A"].filter(a=>cls[a]==='mid').map(a=>factorJP[a]).join("・")+"は中立寄り）"+tag;
+  return {name, tag};
+}
+
+function showResult(raw){
+  document.getElementById('quiz').style.display='none';
+  const R=document.getElementById('result');
+  R.style.display='block';
+
+  const cls={}; const code=[];
+  ['O','C','E','A','N'].forEach(f=>{
+    cls[f]=classify(raw[f]);
+    code.push(letterMap[f][cls[f]]);
+  });
+  const codeStr=code.join('');
+  const colors={O:'var(--O)',C:'var(--C)',E:'var(--E)',A:'var(--A)',N:'var(--N)'};
+
+  // code with colored letters
+  const codeHTML=['O','C','E','A','N'].map((f,i)=>
+    `<span style="color:${cls[f]==='mid'?'var(--fade)':colors[f]}">${code[i]}</span>`).join('');
+
+  // character type
+  const T=resolveType(cls);
+  // supporting sentence from active factors
+  const parts=['O','C','E','A','N'].filter(f=>cls[f]!=='mid')
+    .map(f=>desc[f][cls[f]]);
+  let sentence = parts.length
+    ? parts.join('、')+'るのが特徴。'
+    : 'どの軸も極端に振れないバランス型。';
+
+  // meters
+  const meters=['O','C','E','A','N'].map(f=>{
+    const v=raw[f];                 // -12..12
+    const pct=(v+12)/24*100;        // 0..100
+    const fillLeft = v>=0 ? 50 : pct;
+    const fillW = Math.abs(pct-50);
+    const [loL,hiL]=poleLabels[f];
+    const loAct = cls[f]==='low'?'active':'';
+    const hiAct = cls[f]==='high'?'active':'';
+    return `
+    <div class="meter">
+      <div class="mhead">
+        <div class="mname"><span class="ltr" style="color:${colors[f]}">${code[['O','C','E','A','N'].indexOf(f)]}</span>${factorJP[f]}</div>
+        <div class="mscore mono">${v>0?'+':''}${v} / ±12 · ${cls[f]==='mid'?'中立':cls[f]==='high'?'高':'低'}</div>
+      </div>
+      <div class="mtrack">
+        <div class="mid"></div>
+        <div class="mfill" data-left="${fillLeft}" data-w="${fillW}" style="background:${colors[f]};left:50%;width:0%"></div>
+      </div>
+      <div class="mpoles"><span class="${loAct}">${loL}</span><span class="${hiAct}">${hiL}</span></div>
+    </div>`;
+  }).join('');
+
+  R.innerHTML=`
+    <div class="rsub mono">YOUR PENTAD CODE</div>
+    <div class="rcode mono">${codeHTML}</div>
+    <div class="rtitle">${T.name}</div>
+    <p class="rdesc">${T.tag}<br><span style="color:var(--fade)">— ${sentence}</span></p>
+    <div class="meters">${meters}</div>
+    <div class="rnote">
+      大文字＝その傾向が高い / 小文字＝低い / <b>x</b>＝どちらとも言えない中立域。<br>
+      スコアは各軸の6問（逆転項目含む）を合計した −12〜+12 の連続値です。±4以内は誤差とみなし中立(x)としています。
+    </div>
+    <div class="share">
+      <button class="xbtn" onclick="shareX('${codeStr}',${JSON.stringify(T.name)})">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.24 2H21.5l-7.5 8.57L23 22h-6.86l-5.37-7.02L4.6 22H1.33l8.02-9.17L1 2h7.03l4.86 6.43L18.24 2Zm-1.2 18h1.8L7.03 3.9H5.1L17.04 20Z"/></svg>
+        結果をXに投稿する
+      </button>
+      <button class="copybtn" onclick="copyLink(this)">リンクをコピー</button>
+    </div>
+    <button class="again" onclick="location.reload()">もう一度診断する</button>
+    <p class="disclaim">この診断はビッグファイブ（5因子モデル）の考え方を土台にした簡易版で、正式な心理検査ではありません。結果は自己理解のきっかけとしてお楽しみください。</p>
+  `;
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // animate meters after paint (0 -> final)
+  requestAnimationFrame(()=>{ setTimeout(()=>{
+    document.querySelectorAll('.mfill').forEach(el=>{
+      el.style.left=el.dataset.left+'%';
+      el.style.width=el.dataset.w+'%';
+    });
+  },80); });
+}
+
+/* ===== share ===== */
+function shareX(code, name){
+  const url = location.href.split('#')[0];
+  const text = `私の性格タイプは【${code}｜${name}】でした🧭\n5つの軸で性格を測るPENTAD診断。あなたは何タイプ？\n#PENTAD診断`;
+  const u = 'https://twitter.com/intent/tweet?text='
+          + encodeURIComponent(text) + '&url=' + encodeURIComponent(url);
+  window.open(u, '_blank', 'noopener');
+}
+function copyLink(btn){
+  const url = location.href.split('#')[0];
+  const done = ()=>{ const t=btn.textContent; btn.textContent='コピーしました ✓';
+    setTimeout(()=>btn.textContent=t,1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(()=>fallbackCopy(url,done));
+  } else fallbackCopy(url,done);
+}
+function fallbackCopy(text,cb){
+  const ta=document.createElement('textarea'); ta.value=text;
+  ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta);
+  ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); cb();
+}</script>
+</body>
+</html>
