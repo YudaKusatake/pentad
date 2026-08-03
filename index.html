@@ -399,8 +399,8 @@ function finish(){
 
 function classify(v){
   // -12..12  ->  high / x / low
-  if(v>=5)  return 'high';
-  if(v<=-5) return 'low';
+  if(v>=2)  return 'high';
+  if(v<=-2) return 'low';
   return 'mid';
 }
 const letterMap={
@@ -540,7 +540,7 @@ function showResult(raw){
     <div class="meters">${meters}</div>
     <div class="rnote">
       大文字＝その傾向が高い / 小文字＝低い / <b>x</b>＝どちらとも言えない中立域。<br>
-      スコアは各軸の6問（逆転項目含む）を合計した −12〜+12 の連続値です。±4以内は誤差とみなし中立(x)としています。
+      スコアは各軸の6問（逆転項目含む）を合計した −12〜+12 の連続値です。±1以内のみ中立(x)としています。
     </div>
     <div class="share">
       <button class="xbtn" onclick="shareX('${codeStr}',${JSON.stringify(T.name)})">
